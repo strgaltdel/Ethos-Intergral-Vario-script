@@ -3,7 +3,7 @@
 -- *****************************************
 local sensor 					= "Altitude"	-- please change in case altitude sensor has another label
 local RECORDduration <const> 	= 20			-- duration in seconds for building average
-local RESOLUTION <const> 		= 1				-- save/datapoint-interval in seconds
+local RESOLUTION <const> 	= 1				-- save/datapoint-interval in seconds
 
 
 -- *****************************************
@@ -14,9 +14,12 @@ local translations = {en="integr. Vario", de="integral Vario"}
 -- constants:
 local debugSW <const> 			= false				-- print debug info
 local debugSW2 <const> 			= true	
-local debugTele <const>         = false
+local debugTele <const>        		= false
 local debugAtti <const> 		= true				-- print tx attitude 
 
+local SIM <const> 			= false				-- standard: false; sim mode: true
+
+local DIVISOR <const>			= 1024/ 10			-- sim range +/- 10m
 
 
 
@@ -58,8 +61,11 @@ local function sourceInit(source)
 	source:decimals(1)
 	source:unit(UNIT_METER_PER_SECOND)
 
-	input = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, name = sensor})
---	input = system.getSource({ name = "Throttle"})
+	if SIM then
+		input = system.getSource({ name = "Throttle"})
+	else
+		input = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, name = sensor})
+	end
 
  end
 
@@ -92,13 +98,16 @@ local function sourceWakeup(source)
 		readPtr,writePtr 	= newPointer(readPtr)
 
 		local altiNew 		= input:value()	
+		if SIM then
+			altiNew = (1024/DIVISOR) + altiNew /DIVISOR
+		end
 		local altiOld 		= ring[readPtr]			-- historical altitude
 		ring[writePtr]		= altiNew				-- save new altitude
-		print(readPtr, writePtr, altiOld,altiNew)
+		--print(readPtr, writePtr, altiOld,altiNew)
 		local delta 		= altiNew-altiOld
 		source:value(delta /RECORDduration )		-- calculate average climb last x seconds; 
 
-		print(" ", "  ", "  srcVal:",source:value(),"delta:",delta)
+		print(altiOld,altiNew, "  srcVal:",source:value(),"delta:",delta)
 	end
 
 
