@@ -2,7 +2,7 @@
 
 for Ethos Tandem Transmitters
 
-BETA 0.9
+BETA 0.81
 
 Januar 2024
 
