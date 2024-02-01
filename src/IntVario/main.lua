@@ -34,7 +34,9 @@ local sensor 					= "Altitude"	-- please change in case altitude sensor has anot
 --local sensor 					= "RSSI"		-- just an example in case you want to convert the unit in realtime
 
 local RECORDduration <const> 	= 20			-- duration in seconds for building average
-local RESOLUTION <const> 		= 1			-- save/datapoint-interval in seconds; set to -1 let ruun in realtime "unit conversion"
+local RESOLUTION <const> 		= 1				-- save/datapoint-interval in seconds; set to -1 let ruun in realtime "unit conversion"
+local DIFFonly					= false			-- set to "true" in case you want absolute Diff
+
 
 
 -- *****************************************
@@ -136,8 +138,11 @@ local function sourceWakeup(source)
 			ring[writePtr]		= altiNew				-- save new altitude
 			--print(readPtr, writePtr, altiOld,altiNew)
 			local delta 		= altiNew-altiOld
-			source:value(delta /RECORDduration )		-- calculate average climb last x seconds; 
-
+			if DIFFonly then
+				source:value(delta )					-- absolute alti difference; 
+			else
+				source:value(delta /RECORDduration )	-- calculate average climb last x seconds; 
+			end
 			print(altiOld,altiNew, "  srcVal:",source:value(),"delta:",delta)
 		end
 	else
